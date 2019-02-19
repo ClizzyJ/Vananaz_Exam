@@ -16,6 +16,7 @@ export default class Backgrounds extends Component {
       <View>
         <Image source={require('./assets/images/01-upper-bg.png')}/>
       </View>
+      <Image source={require('./assets/images/Logo.png')}/>
       <View style={styles.lowerbg}>
         <Image source={require('./assets/images/01-lower-bg.png')}/>
       </View>
