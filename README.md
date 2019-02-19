@@ -1,1 +1,1 @@
-$ Vananaz_Exam
+Vananaz Technical Test
