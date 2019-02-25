@@ -24,6 +24,8 @@
     ],
     "ios": {
       "supportsTablet": true
-    }
+    },
+    "description": "Technical Exam",
+    "githubUrl": "https://github.com/ClizzyJ/Vananaz_Exam"
   }
 }

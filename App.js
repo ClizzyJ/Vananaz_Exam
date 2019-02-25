@@ -136,6 +136,7 @@ export default class Backgrounds extends Component {
         style = {styles.suggestions}
         data= {this.state.suggestions}
         renderItem={({item}) => <Text onPress={() => this.suggestionSelected(item)} style ={styles.suggestionItems}>{item}</Text>}    
+        keyExtractor={(item, index) => index.toString()}      
       />
     )
   }
