@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Text, View , StyleSheet, AppRegistry, Image, TextInput,TouchableOpacity} from 'react-native';
+import { Text, View , StyleSheet, AppRegistry, Image, TextInput, TouchableOpacity, AsyncStorage,FlatList} from 'react-native';
 import { CheckBox } from 'react-native-elements';
 
 const styles = StyleSheet.create({
@@ -20,13 +20,11 @@ const styles = StyleSheet.create({
     marginLeft: 25,
     marginRight: 25,
     marginTop: 5,
-    marginBottom: 2,
     height: 40,
     borderColor: '#7a42f4',
     borderWidth: 1,
     paddingLeft: 10,
     fontSize:20,
-    borderRadius: 5
   },
   submitButton: {
     backgroundColor: '#7a42f4',
@@ -62,6 +60,7 @@ const styles = StyleSheet.create({
     marginLeft: 30
   },
   errorText: {
+    marginTop: 2,
     marginLeft: 30,
     marginBottom: 2,
     color: 'red',
@@ -70,6 +69,20 @@ const styles = StyleSheet.create({
   },
   checkBox: {
     fontSize: 200
+  },
+  suggestions: {
+    marginLeft: 25,
+    marginRight:25,
+    padding: 0
+  },
+  suggestionItems : {
+    fontSize: 18,
+    fontStyle: 'italic',
+    padding: 5,
+    paddingLeft:10,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#7a42f4',
   }
 });
 export default class Backgrounds extends Component {
@@ -85,17 +98,69 @@ export default class Backgrounds extends Component {
         password: 'start'
       },
       isEnabled: false,
+      checked: false,
       touched: {
         email: false,
         password: false
-      }
+      },
+      suggestions:[] ,
+      rememberMe: [] ,
+      emails: [],
     };
   }
+  //handles text changes for the email and suggestions
+  onTextChange = (text) => {
+    let suggestions = [];
+    if(text.length > 0){
+        const regex = new RegExp(`^${text}`,'i');
+        suggestions = this.state.emails.sort().filter(v => regex.test(v))
+    }
+    this.setState(() => ({suggestions:suggestions , fields: {...this.state.fields,["email"]: text }}))
+  }
+  //handles the onpress on suggestions
+  suggestionSelected(text){
+    let password;
+    let x;
+    for (x = 0; x < this.state.rememberMe.length && text != this.state.rememberMe[x].email; x++){}
+    password = this.state.rememberMe[x].password
+    
+    this.setState( () => ({errors: {},suggestions: [] ,fields: {...this.state.fields,["email"]: text,["password"]: password}}) )
+  }
+  //renders the suggestions below input
+  renderSuggestions () {
+    if (this.state.suggestions.length === 0){
+      return null;
+    }
+    return (
+      <FlatList 
+        style = {styles.suggestions}
+        data= {this.state.suggestions}
+        renderItem={({item}) => <Text onPress={() => this.suggestionSelected(item)} style ={styles.suggestionItems}>{item}</Text>}    
+      />
+    )
+  }
+ //Log-in and if remember me is ticked, stores the details into AsyncStorage
+  login(){
+    if(this.state.checked){
+      let acc = {
+        email: this.state.fields['email'],
+        password: this.state.fields['password']
+      }
+      let key =  Math.floor((Math.random() * 10) + 1) + 'key' +  Math.floor((Math.random() * 10) + 20);
+        try {
+          AsyncStorage.setItem(key, JSON.stringify(acc));
+        } catch (error) {
+          // Error saving data
+          console.log(error)
+        }
+    }
+    alert("Login Success!");
+  }
+  //handles the validation for email and password
   handleValidation(){
     let fields = this.state.fields;
     let errors = {};
     let formIsValid = true;
-    //console.log(fields)
       //password
       if(typeof fields["password"] !== 'undefined'){
         if(!fields["password"]){
@@ -122,38 +187,51 @@ export default class Backgrounds extends Component {
     this.setState({errors: errors});
     return formIsValid;
   }
-  // onEndValidation(field){
-  //   let result = this.handleValidation(field);
-  //   this.setState(
-  //     {
-  //      isEnabled: result
-  //     }
-  //   )
-  // }
+  // Get list of user infos from AsynchStorage before everything is set for suggestions
+  componentWillMount(){
+    let data = []
+    let emails = []
+      try {
+        AsyncStorage.getAllKeys().then(keys => AsyncStorage.multiGet(keys))
+        .then((result) => {
+          for (let x =0; x < result.length; x++){
+            if (typeof JSON.parse(result[x][1]) !== 'undefined'){
+              data[x] = JSON.parse(result[x][1]);
+              emails[x] = data[x].email;
+            }
+          }
+          this.setState({rememberMe:data, emails:emails})
+        })
+      } catch (error) {
+        // Error retrieving data
+        console.log(error)
+      }
+  }
+
+  // showcase error  if there is after blur
   handleBlur = field => evt => {
     this.setState({
       touched: { ...this.state.touched, [field]: true }
     });
     this.handleValidation();
   };
+
   render() {
     var isDisabled = true;
-    
     const shouldMarkError = field => {
       const hasError = this.state.errors[field];
       const shouldShow = this.state.touched[field];
    
       isDisabled = hasError? true : false;
-      console.log(hasError)
-      //console.log(shouldShow)
-      // console.log(isDisabled);
       return hasError ? shouldShow : false;
     };
+    this.componentWillMount
+    const comp = (a, b) => a.toLowerCase().trim() === b.toLowerCase().trim();
     return (
-      <View style={{
+    <View style={{
         flex: 1,
         alignContent: 'stretch'
-      }}>
+    }}>
 
       <View>
         <Image source={require('./assets/images/01-upper-bg.png')}/>
@@ -169,6 +247,7 @@ export default class Backgrounds extends Component {
 
       <View style={styles.container}>
 
+        {/* Email Inputs,auto fill suggestions and Error Text */}
         <Text style={styles.upperPlaceholder}>Email</Text>
         <TextInput style = {styles.input}
                 refs = "email"
@@ -177,18 +256,14 @@ export default class Backgrounds extends Component {
                 underlineColorAndroid = 'transparent'
                 autoCapitalize = "none"
                 autoCorrect = {false}
-                onChangeText = {
-                  (text) => this.setState({
-                    fields: {...this.state.fields,["email"]: text
-                    }
-                  })
-                }
+                onChangeText = {(text) => this.onTextChange(text)}
                 value ={this.state.fields["email"]}
-                //onEndEditing = {this.onEndValidation.bind(this,"email")}
                 onBlur={this.handleBlur('email')}
         />
+        {this.renderSuggestions()}
         <Text style={styles.errorText}>{ shouldMarkError("email") ? this.state.errors["email"] : ' '}</Text>
-
+      
+        {/* Password Inputs and Error Text */}
         <Text style={styles.upperPlaceholder}>Password</Text>
         <TextInput style = {styles.input}
                 refs = "password"
@@ -205,14 +280,16 @@ export default class Backgrounds extends Component {
                   })
                 }
                 value = {this.state.fields["password"]}
-                //onEndEditing = {this.onEndValidation.bind(this,"password")}
                 onBlur={this.handleBlur('password')}
         />
         <Text style={styles.errorText}>{shouldMarkError("password") ? this.state.errors["password"] : ' '}</Text>  
         
+        {/* CheckBox from react-native elements since based on my research there isnt a checkbox native for IOS */}
         <CheckBox style={styles.checkBox}
           title= 'Remember me' 
           checkedColor= '#9a73ef'  
+          checked={this.state.checked}
+          onPress={() => this.setState({checked: !this.state.checked})}
           containerStyle= {{
             backgroundColor: 'transparent',
             borderTopWidth: 0,
@@ -225,24 +302,20 @@ export default class Backgrounds extends Component {
           textStyle= {{
             fontSize: 18
           }}
-
         />
-        {/* <button 
-          disabled={!isEnabled}
-          title = "Sign in"
-        />   */}
+
+        {/* Sign in Button  */}
         <TouchableOpacity
             disabled ={isDisabled}
             style = {isDisabled ? styles.disabledSubmitButton : styles.submitButton}
             onPress = {
-              () => this.login(this.state.email, this.state.password)
+              () => this.login()
             }>
-            <Text style ={isDisabled ? styles.disabledSubmitButtonText :styles.submitButtonText} >Sign In</Text>
-            
+            <Text style ={isDisabled ? styles.disabledSubmitButtonText :styles.submitButtonText} >Sign In</Text>    
         </TouchableOpacity> 
       </View>
       
-      </View>
+    </View>
     );
   }
 }
