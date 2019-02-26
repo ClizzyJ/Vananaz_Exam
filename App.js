@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Text, View , StyleSheet, AppRegistry, Image, TextInput, TouchableOpacity, AsyncStorage,FlatList} from 'react-native';
 import { CheckBox } from 'react-native-elements';
+import {widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
 
 const styles = StyleSheet.create({
   lowerbg: {
@@ -8,55 +9,55 @@ const styles = StyleSheet.create({
     bottom: 0
   },
   logoView: {
-    marginTop: 30,
     flexDirection: 'row',
     justifyContent: 'center',
   },
   logo: {
+    width: wp('45%'),
+    height: undefined,
     aspectRatio: 1.5,
-    resizeMode: 'contain',
   }, 
   input: {
     marginLeft: 25,
     marginRight: 25,
     marginTop: 5,
-    height: 40,
+    height: hp('5%'),
     borderColor: '#7a42f4',
     borderWidth: 1,
     paddingLeft: 10,
-    fontSize:20,
+    fontSize:hp('2%'),
   },
   submitButton: {
     backgroundColor: '#7a42f4',
     padding: 5,
     marginLeft: 25,
     marginRight: 25,
-    height: 40,
+    height: hp('5%'),
   },
   disabledSubmitButton: {
     backgroundColor: '#e5e5e5',
     padding: 5,
     marginLeft: 25,
     marginRight: 25,
-    height: 40,
+    height: hp('5%'),
     borderRadius: 5
   },
   disabledSubmitButtonText: {
     color: 'gray',
     textAlign: 'center',
-    fontSize: 20
+    fontSize: hp('3%')
   },
   submitButtonText: {
     color: 'white',
     textAlign: 'center',
-    fontSize: 20
+    fontSize: hp('3%')
   },
   container: {
-    paddingTop: 40
+    paddingTop: hp('3.2%')
   },
   upperPlaceholder: {
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: hp('2%'),
     marginLeft: 30
   },
   errorText: {
@@ -64,11 +65,8 @@ const styles = StyleSheet.create({
     marginLeft: 30,
     marginBottom: 2,
     color: 'red',
-    fontSize: 18,
+    fontSize: hp('2%'),
     fontStyle: 'italic'
-  },
-  checkBox: {
-    fontSize: 200
   },
   suggestions: {
     marginLeft: 25,
@@ -76,14 +74,14 @@ const styles = StyleSheet.create({
     padding: 0
   },
   suggestionItems : {
-    fontSize: 18,
+    fontSize: hp('2%'),
     fontStyle: 'italic',
     padding: 5,
     paddingLeft:10,
     borderWidth: 1,
     borderTopWidth: 0,
     borderColor: '#7a42f4',
-  }
+  },
 });
 export default class Backgrounds extends Component {
   constructor(props) {
@@ -239,7 +237,7 @@ export default class Backgrounds extends Component {
       </View>
 
       <View style={styles.logoView} >
-        <Image style={styles.logo} source={require('./assets/images/Logo.png')}/>
+        <Image style={styles.logo} resizeMode='contain' source={require('./assets/images/Logo.png')}/>
       </View>
       
       <View style={styles.lowerbg}>
